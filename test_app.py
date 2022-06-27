@@ -17,12 +17,12 @@ def random_key(length):
 
 class CapstoneTest(unittest.TestCase):
     def setUp(self):
-        self.token_assistant = os.environ['assistant_token']
+        self.token_assistant = os.environ['associate_token']
         self.token_director = os.environ['director_token']
         self.token_producer = os.environ['producer_token']
         self.app = create_app()
         self.client = self.app.test_client
-        self.database_path = "postgresql://agency@localhost:5432/agency_test"
+        self.database_path = "postgresql://postgres:password@localhost:5432/agency_test"
         setup_db(self.app, self.database_path)
 
         with self.app.app_context():
