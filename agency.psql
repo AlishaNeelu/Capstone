@@ -97,9 +97,9 @@ ALTER TABLE public."Movies" OWNER TO agency;
 --
 
 COPY public."Actors" (id, name, age, gender) FROM stdin;
-1	Arjith	30	male
-2	Reyan	30	male
-3	Shreya	38	female
+1	SRK	    50	male
+2	Akshay	50	male
+3	Amithab	78	female
 \.
 
 
@@ -108,9 +108,9 @@ COPY public."Actors" (id, name, age, gender) FROM stdin;
 --
 
 COPY public."Movies" (id, title, release) FROM stdin;
-1	GoGo	2019
-2	alo	1990
-3	matygy	2003
+1	Don	    2015
+2	PK	    2009
+3	Baby	2003
 \.
 
 

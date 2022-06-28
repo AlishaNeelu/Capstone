@@ -10,15 +10,15 @@ from flask import Flask, request, abort, jsonify
 from flask_cors import CORS
 from database.models import Actor, Movie, setup_db
 from auth.auth import *
-ROWS_PER_PAGE = 10
+ROWS_PER_PAGES = 12
 
 
-def paginate_results(request, selection):
+def paginate_row_results(request, selection):
         page = request.args.get('page', 1, type=int)
-        start =  (page - 1) * ROWS_PER_PAGE
-        end = start + ROWS_PER_PAGE
+        start_page =  (page - 1) * ROWS_PER_PAGES
+        end_page = start_page + ROWS_PER_PAGES
         objects_formatted = [object_name.format() for object_name in selection]
-        return objects_formatted[start:end]
+        return objects_formatted[start_page:end_page]
 
 def create_app(test_config=None):
   # create and configure the app
@@ -38,147 +38,147 @@ def create_app(test_config=None):
         msg = 'Welcome to the Casting Agency'
         return jsonify(msg)
 
-    # GET all Actors
+    # GET List of Actors
     @app.route('/actors', methods=['GET'])
     @requires_auth('get:actors')
-    def get_actors(payload):
-        actors = Actor.query.all()
-        if not actors:
+    def get_actors_list(payload):
+        actors_list = Actor.query.all()
+        if not actors_list:
             abort(404)
-        actors_paginated = paginate_results(request, actors)
+        actors_ordered = paginate_row_results(request, actors_list)
         return jsonify({
-            'success': True,
-            'actors': actors_paginated
+            'actors': actors_ordered,
+            'success': True
         }), 200
 
-    # GET all movies
+    # GET List of movies
     @app.route('/movies', methods=['GET'])
     @requires_auth('get:movies')
-    def get_movies(payload):
-        movies = Movie.query.all()
-        if not movies:
+    def get_movies_list(payload):
+        movies_list = Movie.query.all()
+        if not movies_list:
             abort(404)
-        movies_paginated = paginate_results(request, movies)
+        movies_ordered = paginate_row_results(request, movies_list)
         return jsonify({
-            'success': True,
-            'movies': movies_paginated
+            'movies': movies_ordered,
+            'success': True
         }), 200
     
-    # Add new Actor record
+    # Create actor 
     @app.route('/actors', methods=['POST'])
     @requires_auth('post:actors')
-    def add_actor(payload):
-        body = request.get_json()
-        if body is None:
+    def insert_actor(payload):
+        data = request.get_json()
+        if data is None:
             abort(400)
-        name = body.get('name') or None
-        age = body.get('age') or None
-        gender = body.get('gender') or None
+        name = data.get('name') or None
+        age = data.get('age') or None
+        gender = data.get('gender') or None
         if ((name is None) or (age is None) or (gender is None)):
             abort(400)
-        actor = Actor(name=name, age=age, gender=gender)
+        new_actor = Actor(name=name, age=age, gender=gender)
         try:
-            actor.insert()
+            new_actor.insert()
         except Exception as e:
             abort(422)
         return jsonify({
-            'success': True,
-            'actor': actor.format()
+            'actor': new_actor.format(),
+            'success': True
         }), 200
 
-    # Add new Movie record
+    # Create movie
     @app.route('/movies', methods=['POST'])
     @requires_auth('post:movies')
-    def add_movie(payload):
-        body = request.get_json()
-        if body is None:
+    def insert_movie(payload):
+        data = request.get_json()
+        if data is None:
             abort(400)
-        title = body.get('title') or None
-        release = body.get('release') or None
+        title = data.get('title') or None
+        release = data.get('release') or None
         if ((title is None) or (release is None)):
             abort(400)
-        movie = Movie(title=title, release=release)
+        new_movie = Movie(title=title, release=release)
         try:
-            movie.insert()
+            new_movie.insert()
         except Exception as e:
             abort(422)
         return jsonify({
-            'success': True,
-            'actor': movie.format()
+            'movie': new_movie.format(),
+            'success': True           
         }), 200
 
-    # Update an actor record
-    @app.route('/actors/<int:actor_id>', methods=['PATCH'])
+    # Update actor
+    @app.route('/actors/<int:id>', methods=['PATCH'])
     @requires_auth('patch:actors')
-    def update_actor(payload, actor_id):
-        if not actor_id:
+    def update_selected_actor(payload, id):
+        if not id:
             abort(404)
-        actor = Actor.query.get(actor_id)
-        if not actor:
+        selected_actor = Actor.query.get(id)
+        if not selected_actor:
             abort(404)
-        body = request.get_json()
-        if body is None:
+        data = request.get_json()
+        if data is None:
             abort(400)
-        if 'name' in body and body['name']:
-            actor.name = body['name']
-        if 'age' in body and body['age']:
-            actor.age = body['age']
-        if 'gender' in body and body['gender']:
-            actor.gender = body['gender']
-        actor.update()
+        if 'name' in data:
+            selected_actor.name = data['name']
+        if 'age' in data:
+            selected_actor.age = data['age']
+        if 'gender' in data:
+            selected_actor.gender = data['gender']
+        selected_actor.update()
         return jsonify({
-            'success': True,
-            'actor': actor.format(),
+            'actor': selected_actor.format(),
+            'success': True
         }), 200
 
-    # Update a movie record
-    @app.route('/movies/<int:movie_id>', methods=['PATCH'])
+    # Update movie
+    @app.route('/movies/<int:id>', methods=['PATCH'])
     @requires_auth('patch:movies')
-    def update_movie(payload, movie_id):
-        if not movie_id:
+    def update_selected_movie(payload, id):
+        if not id:
             abort(404)
-        movie = Movie.query.get(movie_id)
-        if not movie:
+        selected_movie = Movie.query.get(id)
+        if not selected_movie:
             abort(404)
-        body = request.get_json()
-        if 'title' in body and body['title']:
-            movie.title = body['title']
-        if 'release' in body and body['release']:
-            movie.release = body['release']
-        movie.update()
+        data = request.get_json()
+        if 'title' in data:
+            selected_movie.title = data['title']
+        if 'release' in data:
+            selected_movie.release = data['release']
+        selected_movie.update()
         return jsonify({
-            'success': True,
-            'movie': movie.format(),
+            'movie': selected_movie.format(),
+            'success': True            
         }), 200
 
-    # DELETE actor record
-    @app.route('/actors/<int:actor_id>', methods=['DELETE'])
+    # DELETE actor
+    @app.route('/actors/<int:id>', methods=['DELETE'])
     @requires_auth('delete:actors')
-    def delete_actor(payload, actor_id):
-        if not actor_id:
+    def delete_selected_actor(payload, id):
+        if not id:
             abort(404)
-        actor = Actor.query.get(actor_id)
-        if not actor:
+        selected_actor = Actor.query.get(id)
+        if not selected_actor:
             abort(404)
-        actor.delete()
+        selected_actor.delete()
         return jsonify({
-            'success': True,
-            'actor_id': actor_id
+            'actor_id': id,
+            'success': True            
         }), 200
 
-    # DELETE movie record
-    @app.route('/movies/<int:movie_id>', methods=['DELETE'])
+    # DELETE movie
+    @app.route('/movies/<int:id>', methods=['DELETE'])
     @requires_auth('delete:movies')
-    def delete_movie(payload, movie_id):
-        if not movie_id:
+    def delete_selected_movie(payload, id):
+        if not id:
             abort(404)
-        movie = Movie.query.get(movie_id)
-        if not movie:
+        selected_movie = Movie.query.get(id)
+        if not selected_movie:
             abort(404)
-        movie.delete()
+        selected_movie.delete()
         return jsonify({
-            'success': True,
-            'movie_id': movie_id
+            'movie_id': id,
+            'success': True            
         }), 200
 
     # Error Handling
